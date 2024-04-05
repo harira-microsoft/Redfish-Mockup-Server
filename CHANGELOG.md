@@ -1,5 +1,8 @@
 # Change Log
 
+## [1.2.7] - 2024-04-05
+- Minor updates to improve Docker usage on different platform architectures
+
 ## [1.2.6] - 2024-03-22
 - Updated Docker compose file to automatically generate TLS certificate and key
 
