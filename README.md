@@ -83,7 +83,7 @@ To run as a Docker container, use one of these actions to pull or build the cont
 * Build a container from GitHub:
 
     ```bash
-    docker build -t dmtf/redfish-mockup-server:latest https://github.com/DMTF/Redfish-Mockup-Server.git
+    docker build -t dmtf/redfish-mockup-server:latest https://github.com/DMTF/Redfish-Mockup-Server.git#main
     ```
 
 This command runs the container with the built-in `public-rackmount1` mockup:
