@@ -20,3 +20,10 @@ jobs:
         with:
           recursive: true
           ignore: DL3018,DL3008,DL3013
+
+  markdown-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run tests
+        run: docker run -v $PWD:/workdir ghcr.io/igorshubovych/markdownlint-cli:latest --ignore=minutes --disable=MD013 "**/README.md"

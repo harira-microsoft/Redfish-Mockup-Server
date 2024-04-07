@@ -35,7 +35,7 @@ To run the mockup server as a Docker container:
 
 ## Usage
 
-```
+```text
 Redfish Mockup Server, version 1.1.4
 usage: redfishMockupServer.py [-h] [-H HOST] [-p PORT] [-D DIR] [-E] [-X]
                               [-t TIME] [-T] [-s] [--cert CERT] [--key KEY]
@@ -87,11 +87,13 @@ To run as a Docker container, use one of these actions to pull or build the cont
     ```bash
     docker pull dmtf/redfish-mockup-server:latest
     ```
+
 * Build a container from local source:
 
     ```bash
     docker build -t dmtf/redfish-mockup-server:latest .
     ```
+
 * Build a container from GitHub:
 
     ```bash
