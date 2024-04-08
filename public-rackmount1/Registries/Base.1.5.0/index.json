@@ -1,5 +1,5 @@
 {
-    "@odata.type": "#MessageRegistryFile.v1_1_3.MessageRegistryFile",
+    "@odata.type": "#MessageRegistryFile.v1_1_4.MessageRegistryFile",
     "Id": "Base.1.5.0",
     "Name": "Base Message Registry File",
     "Description": "Base Message Registry File locations",
@@ -14,7 +14,6 @@
             "Uri": "/redfish/v1/Registries/Base.1.5.0.json"
         }
     ],
-    "Oem": {},
     "@odata.id": "/redfish/v1/Registries/Base.1.5.0",
-    "@Redfish.Copyright": "Copyright 2014-2022 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright."
+    "@Redfish.Copyright": "Copyright 2014-2023 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright."
 }

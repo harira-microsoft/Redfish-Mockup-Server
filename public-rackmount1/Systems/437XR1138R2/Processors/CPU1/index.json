@@ -1,5 +1,5 @@
 {
-    "@odata.type": "#Processor.v1_17_0.Processor",
+    "@odata.type": "#Processor.v1_19_0.Processor",
     "Id": "CPU1",
     "Name": "Processor",
     "Socket": "CPU 1",
@@ -15,6 +15,13 @@
         "EffectiveModel": "0x61",
         "Step": "0x1",
         "MicrocodeInfo": "0x429943"
+    },
+    "Location": {
+        "PartLocation": {
+            "ServiceLabel": "CPU 1",
+            "LocationType": "Socket",
+            "LocationOrdinalValue": 0
+        }
     },
     "AdditionalFirmwareVersions": {
         "Microcode": "0x46"
@@ -39,5 +46,5 @@
         "@odata.id": "/redfish/v1/Systems/437XR1138R2/Processors/CPU1/EnvironmentMetrics"
     },
     "@odata.id": "/redfish/v1/Systems/437XR1138R2/Processors/CPU1",
-    "@Redfish.Copyright": "Copyright 2014-2022 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright."
+    "@Redfish.Copyright": "Copyright 2014-2023 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright."
 }

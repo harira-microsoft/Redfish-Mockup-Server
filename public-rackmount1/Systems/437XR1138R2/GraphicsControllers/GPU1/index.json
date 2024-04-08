@@ -1,5 +1,5 @@
 {
-    "@odata.type": "#GraphicsController.v1_0_0.GraphicsController",
+    "@odata.type": "#GraphicsController.v1_0_1.GraphicsController",
     "Id": "GPU1",
     "Name": "Contoso Graphics Controller 1",
     "AssetTag": "",
@@ -27,8 +27,6 @@
     "Ports": {
         "@odata.id": "/redfish/v1/Systems/437XR1138R2/GraphicsControllers/GPU1/Ports"
     },
-    "Links": {},
-    "Oem": {},
     "@odata.id": "/redfish/v1/Systems/437XR1138R2/GraphicsControllers/GPU1",
-    "@Redfish.Copyright": "Copyright 2014-2022 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright."
+    "@Redfish.Copyright": "Copyright 2014-2023 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright."
 }

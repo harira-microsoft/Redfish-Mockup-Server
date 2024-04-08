@@ -1,37 +1,62 @@
 {
-    "@odata.type": "#Sensor.v1_6_0.Sensor",
+    "@odata.type": "#Sensor.v1_8_1.Sensor",
     "Id": "DIMM2Temp",
     "Name": "DIMM #2 Temperature",
-    "Oem": {},
     "PhysicalContext": "Memory",
     "Status": {
         "State": "Enabled",
         "Health": "OK"
     },
-    "Reading": 44,
+    "Reading": 43,
     "ReadingUnits": "Cel",
     "Thresholds": {
         "UpperCaution": {
             "Reading": 55,
             "DwellTime": "PT5M",
-            "Activation": "Increasing"
+            "Activation": "Increasing",
+            "HysteresisReading": -2,
+            "HysteresisDuration": "PT1M",
+            "@Redfish.WriteableProperties": []
         },
         "UpperCautionUser": {
-            "Reading": 50
-        },
-        "UpperCriticalUser": {
-            "Reading": 60,
-            "DwellTime": "PT1M"
+            "Reading": 50,
+            "DwellTime": "PT5M",
+            "HysteresisReading": 0,
+            "HysteresisDuration": "PT10M",
+            "@Redfish.WriteableProperties": [
+                "Reading",
+                "DwellTime",
+                "HysteresisReading",
+                "HysteresisDuration"
+            ]
         },
         "UpperCritical": {
             "Reading": 65,
             "DwellTime": "PT5M",
-            "Activation": "Increasing"
+            "Activation": "Increasing",
+            "HysteresisReading": -2,
+            "HysteresisDuration": "PT1M",
+            "@Redfish.WriteableProperties": []
+        },
+        "UpperCriticalUser": {
+            "Reading": 60,
+            "DwellTime": "PT5M",
+            "HysteresisReading": -1,
+            "HysteresisDuration": "PT5M",
+            "@Redfish.WriteableProperties": [
+                "Reading",
+                "DwellTime",
+                "HysteresisReading",
+                "HysteresisDuration"
+            ]
         },
         "UpperFatal": {
             "Reading": 75,
             "DwellTime": "PT30S",
-            "Activation": "Increasing"
+            "Activation": "Increasing",
+            "HysteresisReading": -2,
+            "HysteresisDuration": "PT30S",
+            "@Redfish.WriteableProperties": []
         }
     },
     "ReadingRangeMin": 0,
@@ -42,5 +67,5 @@
         }
     ],
     "@odata.id": "/redfish/v1/Chassis/1U/Sensors/DIMM2Temp",
-    "@Redfish.Copyright": "Copyright 2014-2022 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright."
+    "@Redfish.Copyright": "Copyright 2014-2023 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright."
 }
