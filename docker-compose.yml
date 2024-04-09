@@ -21,6 +21,15 @@ services:
       - dmtf
     command: ["--fail", "-i", "-H", "Accept:application/yang-data+json", "http://bmc:8000/redfish/v1/Managers"]
 
+  test-utils:
+    image: docker.io/dmtf/redfish-tacklebox:latest
+    depends_on:
+      bmc:
+        condition: service_healthy
+    networks:
+      - dmtf
+    command: ["rf_manager_config.py", "--user", "root", "--password", "123", "--rhost", "http://bmc:8000"]
+
   setup-cert:
     image: docker.io/dmtf/redfish-mockup-server:latest
     volumes:
@@ -59,6 +68,14 @@ services:
       - dmtf
     command: ["--fail", "--insecure", "-i", "-H", "Accept:application/yang-data+json", "https://bmc-ssl:9000/redfish/v1/Managers"]
 
+  test-utils-ssl:
+    image: docker.io/dmtf/redfish-tacklebox:latest
+    depends_on:
+      bmc:
+        condition: service_healthy
+    networks:
+      - dmtf
+    command: ["rf_manager_config.py", "--user", "root", "--password", "123", "--rhost", "https://bmc-ssl:9000"]
 
 networks:
   dmtf:
