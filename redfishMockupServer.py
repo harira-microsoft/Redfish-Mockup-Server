@@ -14,8 +14,10 @@ import json
 import threading
 import datetime
 import signal
+import tempfile
 
 import grequests
+import multipart
 
 import os
 import ssl
@@ -570,6 +572,8 @@ class RfMockupServer(BaseHTTPRequestHandler):
 
     def do_PATCH(self):
         logger.info("   PATCH: Headers: {}".format(self.headers))
+        ctype, pdict = multipart.parse_options_header(self.headers.get('content-type', None))
+        logger.info("   PATCH: Content: type={} and params={}".format(ctype, pdict))
         self.try_to_sleep("PATCH", self.path)
 
         if "content-length" in self.headers:
@@ -617,6 +621,8 @@ class RfMockupServer(BaseHTTPRequestHandler):
 
     def do_PUT(self):
         logger.info("   PUT: Headers: {}".format(self.headers))
+        ctype, pdict = multipart.parse_options_header(self.headers.get('content-type', None))
+        logger.info("   PUT: Content: type={} and params={}".format(ctype, pdict))
         self.try_to_sleep("PUT", self.path)
 
         if "content-length" in self.headers:
@@ -637,16 +643,39 @@ class RfMockupServer(BaseHTTPRequestHandler):
 
     def do_POST(self):
         logger.info("   POST: Headers: {}".format(self.headers))
+        ctype, pdict = multipart.parse_options_header(self.headers.get('content-type', None))
+        logger.info("   POST: Content: type={} and params={}".format(ctype, pdict))
         if "content-length" in self.headers:
             lenn = int(self.headers["content-length"])
             if lenn == 0:
                 data_received = {}
             else:
-                try:
-                    data_received = json.loads(self.rfile.read(lenn).decode("utf-8"))
-                except ValueError:
-                    print("Decoding JSON has failed, sending 400")
+                if ctype == 'multipart/form-data':
                     data_received = None
+                    boundary = pdict.get("boundary", "")
+                    if not boundary:
+                        # TODO: return error ?
+                        print("No boundary for multipart/form-data.")
+                    # Redfish specification requires two parts:
+                    # (1) UpdateParameters (JSON formatted,
+                    #     adhering to the UpdateService Schema)
+                    # (2) UpdateFile (binary file to use for this update)
+                    #
+                    # The third part is optional: OemXXX
+                    for part in multipart.MultipartParser(self.rfile, boundary, lenn):
+                        logger.info("   POST: MULTIPART: name={} and file={}".format(part.name, part.filename))
+                        if part.filename:
+                            with tempfile.TemporaryDirectory() as tmpdir:
+                                part.save_as(os.path.join(tmpdir, part.filename))
+                        else:
+                            data_received = json.loads(part.value)
+                        part.close()
+                else:
+                    try:
+                        data_received = json.loads(self.rfile.read(lenn).decode("utf-8"))
+                    except ValueError:
+                        print("Decoding JSON has failed, sending 400")
+                        data_received = None
         else:
             self.send_response(411)
             self.end_headers()
@@ -701,6 +730,10 @@ class RfMockupServer(BaseHTTPRequestHandler):
                 elif "TelemetryService/Actions/TelemetryService.SubmitTestMetricReport" in self.path:
                     r_code = self.handle_telemetry(data_received)
                     self.send_response(r_code)
+                # UpdateService (SimpleUpdate is handled part of the Actions, so only multipart is here)
+                elif "UpdateService/update-multipart" in self.path:
+                    logger.info("TBD: handle multipart")
+                    self.send_response(204)
                 # All other actions (no data checking or response data)
                 elif "/Actions/" in self.path:
                     fpath = self.construct_path(self.path.split("/Actions/", 1)[0], "index.json")
