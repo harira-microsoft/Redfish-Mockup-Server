@@ -1,5 +1,8 @@
 # Change Log
 
+## [1.2.8] - 2024-04-12
+- Updated integrated mockup to version 2023.3 of public-rackmount1
+
 ## [1.2.7] - 2024-04-05
 - Minor updates to improve Docker usage on different platform architectures
 
