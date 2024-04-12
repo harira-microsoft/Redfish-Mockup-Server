@@ -6,6 +6,7 @@ Copyright 2016-2020 DMTF. All rights reserved.
 [![Pulls](https://img.shields.io/docker/pulls/dmtf/redfish-mockup-server?style=flat&logo=docker&label=Pulls)](https://hub.docker.com/r/dmtf/redfish-mockup-server)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat)](https://github.com/psf/black)
 [![Linters](https://github.com/DMTF/Redfish-Mockup-Server/actions/workflows/linters.yml/badge.svg)](https://github.com/DMTF/Redfish-Mockup-Server/actions/workflows/linters.yml)
+[![Docker](https://github.com/DMTF/Redfish-Mockup-Server/actions/workflows/docker.yml/badge.svg)](https://github.com/DMTF/Redfish-Mockup-Server/actions/workflows/docker.yml)
 [![GitHub stars](https://img.shields.io/github/stars/DMTF/Redfish-Mockup-Server.svg?style=flat-square&label=github%20stars)](https://github.com/DMTF/Redfish-Mockup-Server)
 [![GitHub Contributors](https://img.shields.io/github/contributors/DMTF/Redfish-Mockup-Server.svg?style=flat-square)](https://github.com/DMTF/Redfish-Mockup-Server/graphs/contributors)
 
