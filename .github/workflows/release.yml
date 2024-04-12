@@ -89,7 +89,7 @@ jobs:
       with:
         context: .
         push: true
-        tags: dmtf/redfish-mockup-server:${{github.event.inputs.version}}
+        tags: dmtf/redfish-mockup-server:${{github.event.inputs.version}},dmtf/redfish-mockup-server:latest
         platforms: linux/arm64,linux/amd64
     - name: Image digest
       run: echo ${{steps.docker_build.outputs.digest}}
