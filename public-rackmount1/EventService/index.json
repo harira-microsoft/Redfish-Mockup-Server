@@ -1,5 +1,5 @@
 {
-    "@odata.type": "#EventService.v1_9_0.EventService",
+    "@odata.type": "#EventService.v1_10_1.EventService",
     "Id": "EventService",
     "Name": "Event Service",
     "Status": {
@@ -23,8 +23,7 @@
         "#EventService.SubmitTestEvent": {
             "target": "/redfish/v1/EventService/Actions/EventService.SubmitTestEvent",
             "@Redfish.ActionInfo": "/redfish/v1/EventService/SubmitTestEventActionInfo"
-        },
-        "Oem": {}
+        }
     },
     "SMTP": {
         "ServiceEnabled": true,
@@ -36,7 +35,6 @@
         "Username": "employee123",
         "Password": null
     },
-    "Oem": {},
     "@odata.id": "/redfish/v1/EventService",
-    "@Redfish.Copyright": "Copyright 2014-2022 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright."
+    "@Redfish.Copyright": "Copyright 2014-2023 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright."
 }

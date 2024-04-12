@@ -1,5 +1,5 @@
 {
-    "@odata.type": "#ActionInfo.v1_3_0.ActionInfo",
+    "@odata.type": "#ActionInfo.v1_4_1.ActionInfo",
     "Id": "RekeyActionInfo",
     "Name": "Rekey Action Info",
     "Parameters": [
@@ -28,7 +28,6 @@
             ]
         }
     ],
-    "Oem": {},
     "@odata.id": "/redfish/v1/UpdateService/ClientCertificates/1/RekeyActionInfo",
-    "@Redfish.Copyright": "Copyright 2014-2022 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright."
+    "@Redfish.Copyright": "Copyright 2014-2023 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright."
 }

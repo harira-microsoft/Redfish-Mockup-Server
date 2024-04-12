@@ -1,5 +1,5 @@
 {
-    "@odata.type": "#ManagerNetworkProtocol.v1_9_1.ManagerNetworkProtocol",
+    "@odata.type": "#ManagerNetworkProtocol.v1_10_0.ManagerNetworkProtocol",
     "Id": "NetworkProtocol",
     "Name": "Manager Network Protocol",
     "Description": "Manager Network Service",
@@ -82,7 +82,6 @@
         "ProtocolEnabled": true,
         "Port": 5288
     },
-    "Oem": {},
     "@odata.id": "/redfish/v1/Managers/BMC/NetworkProtocol",
-    "@Redfish.Copyright": "Copyright 2014-2022 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright."
+    "@Redfish.Copyright": "Copyright 2014-2023 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright."
 }

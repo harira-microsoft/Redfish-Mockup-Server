@@ -6,7 +6,7 @@
     "Members": [
         {
             "@odata.id": "/redfish/v1/Managers/BMC/LogServices/Log/Entries/1",
-            "@odata.type": "#LogEntry.v1_14_0.LogEntry",
+            "@odata.type": "#LogEntry.v1_16_0.LogEntry",
             "Id": "1",
             "Name": "Log Entry 1",
             "EntryType": "Event",
@@ -21,12 +21,10 @@
             "Links": {
                 "OriginOfCondition": {
                     "@odata.id": "/redfish/v1/Chassis/1U/Thermal"
-                },
-                "Oem": {}
-            },
-            "Oem": {}
+                }
+            }
         }
     ],
     "@odata.id": "/redfish/v1/Managers/BMC/LogServices/Log/Entries",
-    "@Redfish.Copyright": "Copyright 2014-2022 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright."
+    "@Redfish.Copyright": "Copyright 2014-2023 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright."
 }

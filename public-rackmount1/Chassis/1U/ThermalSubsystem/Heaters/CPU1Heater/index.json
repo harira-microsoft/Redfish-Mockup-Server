@@ -1,5 +1,5 @@
 {
-    "@odata.type": "#Heater.v1_0_0.Heater",
+    "@odata.type": "#Heater.v1_0_1.Heater",
     "Id": "CPU1Heater",
     "Description": "Heater for CPU1",
     "Name": "Heater 1",
@@ -26,5 +26,5 @@
         "@odata.id": "/redfish/v1/Chassis/1U/ThermalSubsystem/Heaters/CPU1Heater/Metrics"
     },
     "@odata.id": "/redfish/v1/Chassis/1U/ThermalSubsystem/Heaters/CPU1Heater",
-    "@Redfish.Copyright": "Copyright 2014-2022 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright."
+    "@Redfish.Copyright": "Copyright 2014-2023 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright."
 }
