@@ -12,7 +12,7 @@ services:
     networks:
       - dmtf
 
-  test:
+  test-curl-nossl:
     image: docker.io/curlimages/curl:8.5.0
     depends_on:
       bmc:
@@ -21,7 +21,7 @@ services:
       - dmtf
     command: ["--fail", "-i", "-H", "Accept:application/yang-data+json", "http://bmc:8000/redfish/v1/Managers"]
 
-  test-utils:
+  test-utils-nossl:
     image: docker.io/dmtf/redfish-tacklebox:latest
     depends_on:
       bmc:
@@ -59,7 +59,7 @@ services:
     healthcheck:
       test: curl --insecure --fail https://localhost:9000/redfish/
 
-  test-ssl:
+  test-curl-ssl:
     image: docker.io/curlimages/curl:8.5.0
     depends_on:
       bmc-ssl:
