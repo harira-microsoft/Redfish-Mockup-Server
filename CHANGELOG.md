@@ -1,5 +1,8 @@
 # Change Log
 
+## [1.2.9] - 2024-05-03
+- Added basic handling for multipart requests
+
 ## [1.2.8] - 2024-04-12
 - Updated integrated mockup to version 2023.3 of public-rackmount1
 

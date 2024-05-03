@@ -32,7 +32,7 @@ ch = logging.StreamHandler(sys.stdout)
 ch.setLevel(logging.INFO)
 logger.addHandler(ch)
 
-tool_version = "1.2.8"
+tool_version = "1.2.9"
 
 dont_send = ["connection", "keep-alive", "content-length", "transfer-encoding"]
 
