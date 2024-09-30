@@ -15,7 +15,7 @@ import threading
 import datetime
 import signal
 import tempfile
-
+import shutil
 import grequests
 import multipart
 
@@ -25,6 +25,7 @@ import logging
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, urlunparse, parse_qs
 from rfSsdpServer import RfSSDPServer
+from requests_toolbelt.multipart import decoder
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -35,7 +36,7 @@ logger.addHandler(ch)
 tool_version = "1.2.9"
 
 dont_send = ["connection", "keep-alive", "content-length", "transfer-encoding"]
-
+MockDir = None
 
 def dict_merge(dct, merge_dct):
     """
@@ -75,6 +76,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
     """
 
     patchedLinks = dict()
+    eventsubscriptions = []
 
     def construct_path(self, path, filename):
         """construct_path
@@ -154,9 +156,109 @@ class RfMockupServer(BaseHTTPRequestHandler):
         data_received["@odata.id"] = newpath
         data_received["Id"] = newpath_id
 
-        payload["Members"] = members
-        payload["Members@odata.count"] = len(members)
-        return newpath
+        payload['Members'] = members
+        payload['Members@odata.count'] = len(members)
+        return newpath        
+            
+    def handle_adding_subscriptions(self, data_received):
+        sub_path = self.construct_path('/redfish/v1/EventService/Subscriptions', 'index.json')
+        success, sub_payload = self.get_cached_link(sub_path)
+        logger.info(sub_path)
+        if not success:
+            # Eventing not supported
+            return (404)
+        
+        members_count = sub_payload.get('Members@odata.count')
+        
+        subscription_entry = dict()
+        subscription_entry['@odata.type'] = '#EventDestination.v1_7_0.EventDestination'
+        subscription_entry['@odata.id'] = "/redfish/v1/EventService/Subscriptions/" + "EventSubscription"+str(members_count+1)
+        if ( 'Destination' in data_received ):
+            subscription_entry['Destination'] = data_received['Destination']
+        
+        if ( 'Context' in data_received ):
+            subscription_entry['Context'] = data_received['Context']
+        
+        if ( 'Protocol' in data_received ):
+            subscription_entry['Protocol'] = data_received['Protocol']
+        
+        if ( 'SubscriptionType' in data_received ):
+            subscription_entry['SubscriptionType'] = data_received['SubscriptionType']
+        
+        if ( 'EventFormatType' in data_received ):
+            subscription_entry['EventFormatType'] = data_received['EventFormatType']
+        
+        if ( 'HttpHeaders' in data_received ):
+            subscription_entry['HttpHeaders'] = data_received['HttpHeaders']
+        
+        if ( 'DeliveryRetryPolicy' in data_received ):
+            subscription_entry['DeliveryRetryPolicy'] = data_received['DeliveryRetryPolicy']
+        
+        if ( 'MetricReportDefinitions' in data_received ):
+            subscription_entry['MetricReportDefinitions'] = data_received['MetricReportDefinitions']
+        
+        if ( 'RegistryPrefixes' in data_received ):
+            subscription_entry['RegistryPrefixes'] = data_received['RegistryPrefixes']
+        
+        if ( 'ResourceTypes' in data_received ):
+            subscription_entry['ResourceTypes'] = data_received['ResourceTypes']
+        
+        if ( 'MessageIds' in data_received ):
+            subscription_entry['MessageIds'] = data_received['MessageIds']
+        
+        if ( 'Description' in data_received ):
+            subscription_entry['Description'] = data_received['Description']
+
+        self.eventsubscriptions.append(subscription_entry)
+                    
+        os.mkdir(self.server.mockDir+subscription_entry['@odata.id'])
+        subscription_path = self.construct_path(subscription_entry['@odata.id'], 'index.json')
+        PrettyJson = json.dumps(subscription_entry, indent=4, separators=(',', ":"))
+        with open(subscription_path, "w") as outfile:
+            outfile.write(PrettyJson)
+        outfile.close()            
+
+        Members = sub_payload.get('Members')
+        entry = dict()
+        entry['@odata.id'] = subscription_entry['@odata.id']
+        Members.append(entry)
+        sub_payload['Members@odata.count'] = int(members_count+1)
+
+        #print(sub_payload)
+        PrettyJson = json.dumps(sub_payload, indent=4, separators=(',', ":"))
+        print(PrettyJson)
+        print(sub_path)
+        with open(sub_path, "w") as outfile:
+            outfile.write(PrettyJson)
+        outfile.close()            
+
+        return(200)
+
+    def handle_POST_EventService(self, data_received):
+        if 'EventService/Subscriptions' in self.path:
+            r_code = self.handle_adding_subscriptions(data_received)
+            self.send_response(r_code)                
+            fpath = self.construct_path('/redfish/v1/Messages', 'success_index.json')
+            success, payload = self.get_cached_link(fpath)               
+            encoded_data = json.dumps(payload, sort_keys=True, indent=4, separators=(",", ": ")).encode()
+            self.send_header("Content-Length", len(encoded_data))
+            self.end_headers()
+            self.wfile.write(encoded_data)
+            self.end_headers()
+            return
+            #self.send_response(r_code)                
+        
+        if 'EventService/Actions/EventService.SubmitTestEvent' in self.path:
+            r_code = self.handle_eventing(data_received)
+            self.send_response(r_code)                
+            fpath = self.construct_path('/redfish/v1/Messages', 'success_index.json')
+            success, payload = self.get_cached_link(fpath)               
+            encoded_data = json.dumps(payload, sort_keys=True, indent=4, separators=(",", ": ")).encode()
+            self.send_header("Content-Length", len(encoded_data))
+            self.end_headers()
+            self.wfile.write(encoded_data)
+            self.end_headers()
+            return r_code
 
     def handle_eventing(self, data_received):
         sub_path = self.construct_path("/redfish/v1/EventService/Subscriptions", "index.json")
@@ -167,72 +269,71 @@ class RfMockupServer(BaseHTTPRequestHandler):
             return 404
         else:
             # Check if all of the parameters are given
-            if (
-                ("EventType" not in data_received)
-                or ("EventId" not in data_received)
-                or ("EventTimestamp" not in data_received)
-                or ("Severity" not in data_received)
-                or ("Message" not in data_received)
-                or ("MessageId" not in data_received)
-                or ("MessageArgs" not in data_received)
-                or ("OriginOfCondition" not in data_received)
-            ):
-                return 400
+            if ( ('EventType' not in data_received) and ('EventId' not in data_received) and
+                    ('EventTimestamp' not in data_received) and ('Severity' not in data_received) and
+                    ('Message' not in data_received) and ('MessageId' not in data_received) and
+                    ('MessageArgs' not in data_received) and ('OriginOfCondition' not in data_received) ):
+                print(data_received)
+                print("Check Failed")
+                return (400)
             else:
                 # Need to reformat to make Origin Of Condition a proper link
-                origin_of_cond = data_received["OriginOfCondition"]
-                data_received["OriginOfCondition"] = {}
-                data_received["OriginOfCondition"]["@odata.id"] = origin_of_cond
+                if 'OriginOfCondition' in data_received:
+                    origin_of_cond = data_received['OriginOfCondition']
+                    data_received['OriginOfCondition'] = {}
+                    data_received['OriginOfCondition']['@odata.id'] = origin_of_cond
+                
                 event_payload = {}
-                event_payload["@odata.type"] = "#Event.v1_2_1.Event"
-                event_payload["Name"] = "Test Event"
-                event_payload["Id"] = str(self.event_id)
-                event_payload["Events"] = []
-                event_payload["Events"].append(data_received)
+                event_payload['@odata.type'] = '#Event.v1_7_0.Event'
+                event_payload['Name'] = 'Event Log'
+                event_payload['Id'] = str(self.event_id)
+                event_payload['Events'] = []
+                event_payload['Events'].append(data_received)
 
                 # Go through each subscriber
                 events = []
-                for member in sub_payload.get("Members", []):
-                    entry = member["@odata.id"]
-                    entrypath = self.construct_path(entry, "index.json")
+                print(sub_payload)
+                for member in sub_payload.get('Members', []):
+                    print(member)
+                    entry = member['@odata.id']
+                    entrypath = self.construct_path(entry, 'index.json')
                     success, subscription = self.get_cached_link(entrypath)
                     if not success:
-                        logger.info("No such resource")
+                        print('No such resource')
+                        logger.info('No such resource')
                     else:
+                        print(subscription)
                         # Sanity check the subscription for required properties
-                        if ("Destination" in subscription) and ("EventTypes" in subscription):
-                            logger.info(("Target", subscription["Destination"]))
-                            logger.info((data_received["EventType"], subscription["EventTypes"]))
-
-                            # If the EventType in the request is one of interest to the subscriber, build an event payload
-                            if data_received["EventType"] in subscription["EventTypes"]:
-                                http_headers = {}
-                                http_headers["Content-Type"] = "application/json"
-
-                                event_payload["Context"] = subscription.get("Context", "Default Context")
-
-                                # Send the event
-                                events.append(
-                                    grequests.post(
-                                        subscription["Destination"], timeout=20, data=json.dumps(event_payload), headers=http_headers
-                                    )
-                                )
-                            else:
-                                logger.info("event not in eventtypes")
+                        if ('Destination' in subscription) and ('Protocol' in subscription):
+                            if 'MessageId' in data_received: 
+                                registryprefixes = data_received['MessageId'].split(".")[0]
+                                if registryprefixes in subscription.get('RegistryPrefixes'):
+                                    http_headers = {}
+                                    http_headers['Content-Type'] = 'application/json'
+                                    event_payload['Context'] = subscription.get('Context', 'Default Context')
+                                    print("Sending the Event: ")
+                                    print(event_payload)
+                                    # Send the event
+                                    events.append(grequests.post(subscription['Destination'], timeout=20, data=json.dumps(event_payload), headers=http_headers))
+                                else:
+                                    print('event not in eventtypes')
+                                    logger.info('event not in eventtypes')
                 try:
                     threading.Thread(target=grequests.map, args=(events,)).start()
                 except Exception as e:
-                    logger.info("post error {}".format(str(e)))
-                return 204
+                    print('post error {}'.format( str(e)))
+                    logger.info('post error {}'.format( str(e)))
+
+                return (200)
                 self.event_id = self.event_id + 1
 
     def handle_telemetry(self, data_received):
-        sub_path = self.construct_path("/redfish/v1/EventService/Subscriptions", "index.json")
+        sub_path = self.construct_path('/redfish/v1/EventService/Subscriptions', 'index.json')
         success, sub_payload = self.get_cached_link(sub_path)
         logger.info(sub_path)
         if not success:
             # Eventing not supported
-            return 404
+            return (404)
         else:
             # Check if all of the parameters are given
             if (
@@ -686,8 +787,15 @@ class RfMockupServer(BaseHTTPRequestHandler):
         if data_received is not None:
             logger.info("   POST: Data: {}".format(data_received))
             # construct path "mockdir/path/to/resource/<filename>"
-            fpath = self.construct_path(self.path, "index.json")
-            success, payload = self.get_cached_link(fpath)
+            success = False
+            if "EventService" in self.path:
+                r_code = self.handle_POST_EventService(data_received)
+                return
+
+            if "Oem" not in self.path:
+                fpath = self.construct_path(self.path, 'index.json')
+                success, payload = self.get_cached_link(fpath)
+                
 
             # don't bother if this item exists, otherwise, check if its an action or a file
             # if file
@@ -730,6 +838,105 @@ class RfMockupServer(BaseHTTPRequestHandler):
                 elif "TelemetryService/Actions/TelemetryService.SubmitTestMetricReport" in self.path:
                     r_code = self.handle_telemetry(data_received)
                     self.send_response(r_code)
+                elif 'Action/Oem/Microsoft.VirtualReseat' in self.path:
+                    shutdowndelay = None
+                    hscdelay = None
+                    reboottype = None
+                    reboottypeList = ['GracefulOff', 'GracefulSocOff', 'GracefulHostOff']
+                    errorflag = False
+                    self.send_response(200)
+                    if data_received.get('ShutdownDelay') is not None:
+                        shutdowndelay = int(data_received.get('ShutdownDelay'))
+                    if data_received.get('HscDelay') is not None:
+                        hscdelay = int(data_received.get('HscDelay'))
+                    if data_received.get('RebootType') is not None:
+                        reboottype =  data_received.get('RebootType')
+                    if shutdowndelay == None:
+                        errorflag = True
+                        fpath = self.construct_path('/redfish/v1/Messages', 'ActionParameterMissing.json')
+                        success, payload = self.get_cached_link(fpath)  
+                        extendedInfo = payload['@Message.ExtendedInfo']
+                        for index in range(0, len(extendedInfo)):
+                            message = extendedInfo[index].get('Message')
+                            message = message.replace("%1", "Microsoft.VirtualReseat").replace("%2", 'ShutDownDelay')
+                            extendedInfo[index]['Message'] = message
+                            msgargs = extendedInfo[index].get('MessageArgs')
+                            msgargs[0] = 'Microsoft.VirtualReseat'
+                            msgargs[1] = 'ShutDownDelay'
+                    elif shutdowndelay > 150: 
+                        errorflag = True
+                        fpath = self.construct_path('/redfish/v1/Messages', 'ActionParameterValueError.json')
+                        success, payload = self.get_cached_link(fpath)  
+                        extendedInfo = payload['@Message.ExtendedInfo']
+                        for index in range(0, len(extendedInfo)):
+                            message = extendedInfo[index].get('Message')
+                            message = message.replace("%2", "Microsoft.VirtualReseat").replace("%1", 'ShutDownDelay')
+                            extendedInfo[index]['Message'] = message
+                            msgargs = extendedInfo[index].get('MessageArgs')
+                            msgargs[0] = 'ShutDownDelay'
+                            msgargs[1] = 'Microsoft.VirtualReseat'
+                    elif hscdelay != None and hscdelay > 10: 
+                            errorflag = True
+                            fpath = self.construct_path('/redfish/v1/Messages', 'ActionParameterValueError.json')
+                            success, payload = self.get_cached_link(fpath)  
+                            extendedInfo = payload['@Message.ExtendedInfo']
+                            for index in range(0, len(extendedInfo)):
+                                message = extendedInfo[index].get('Message')
+                                message = message.replace("%2", "Microsoft.VirtualReseat").replace("%1", 'HscDelay')
+                                extendedInfo[index]['Message'] = message        
+                                msgargs = extendedInfo[index].get('MessageArgs')
+                                msgargs[0] = 'HscDelay'
+                                msgargs[1] = 'Microsoft.VirtualReseat'
+                    elif reboottype != None:
+                        if reboottype not in reboottypeList:
+                            errorflag = True
+                            fpath = self.construct_path('/redfish/v1/Messages', 'ActionParameterValueNotInList.json')
+                            success, payload = self.get_cached_link(fpath)  
+                            extendedInfo = payload['@Message.ExtendedInfo']
+                            for index in range(0, len(extendedInfo)):
+                                message = extendedInfo[index].get('Message')
+                                message = message.replace("%3", "Microsoft.VirtualReseat").replace("%2", 'RebootType').replace("%1", reboottype)
+                                extendedInfo[index]['Message'] = message       
+                                msgargs = extendedInfo[index].get('MessageArgs')  
+                                msgargs[0] = reboottype
+                                msgargs[1] = 'RebootType'
+                                msgargs[2] = 'Microsoft.VirtualReseat'
+                        else:
+                            if reboottype == 'GracefulOff' or reboottype == 'GracefulHostOff':
+                                errorflag = True
+                                fpath = self.construct_path('/redfish/v1/Messages', 'ActionParameterNotSupported.json')
+                                success, payload = self.get_cached_link(fpath)  
+                                extendedInfo = payload['@Message.ExtendedInfo']
+                                for index in range(0, len(extendedInfo)):
+                                    message = extendedInfo[index].get('Message')
+                                    message = message.replace("%2", "Microsoft.VirtualReseat").replace("%1", 'Rebootype - '+reboottype)
+                                    extendedInfo[index]['Message'] = message    
+                                    msgargs = extendedInfo[index].get('MessageArgs')     
+                                    msgargs[0] = 'Rebootype - '+reboottype
+                                    msgargs[1] = 'Microsoft.VirtualReseat'
+
+                        if errorflag == False:
+                            fpath = self.construct_path('/redfish/v1/Messages', 'success_index.json')
+                            success, payload = self.get_cached_link(fpath)               
+
+                        encoded_data = json.dumps(payload, sort_keys=True, indent=4, separators=(",", ": ")).encode()
+                        self.send_header("Content-Length", len(encoded_data))
+                        self.end_headers()
+                        self.wfile.write(encoded_data)
+                    elif 'system/Actions/Oem/SafeACReset' in self.path:
+                        self.send_response(200)
+                        timeout = int(data_received.get('TimeoutInSeconds'))
+                        if timeout < 20: 
+                            fpath = self.construct_path('/redfish/v1/Messages', 'success_index.json')
+                            success, payload = self.get_cached_link(fpath)  
+                        else:
+                            fpath = self.construct_path('/redfish/v1/Messages', 'timeout_index.json')
+                            success, payload = self.get_cached_link(fpath)                              
+                        encoded_data = json.dumps(payload, sort_keys=True, indent=4, separators=(",", ": ")).encode()
+                        self.send_header("Content-Length", len(encoded_data))
+                        self.end_headers()
+                        self.wfile.write(encoded_data)
+
                 # UpdateService (SimpleUpdate is handled part of the Actions, so only multipart is here)
                 elif "UpdateService/update-multipart" in self.path:
                     logger.info("TBD: handle multipart")
@@ -937,6 +1144,7 @@ def main():
         myServer.serve_forever()
 
     except KeyboardInterrupt:
+        clear_subscriptions()
         pass
 
     myServer.server_close()
