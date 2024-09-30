@@ -1071,6 +1071,7 @@ def main():
 
     # create the full path to the top directory holding the Mockup
     mockDir = os.path.realpath(mockDirPath)  # creates real full path including path for CWD to the -D<mockDir> dir path
+    MockDir = mockDir
     logger.info("Serving Mockup in absolute path: {}".format(mockDir))
 
     # check that we have a valid tall mockup--with /redfish in mockDir before proceeding
@@ -1088,6 +1089,26 @@ def main():
             sys.exit(1)
 
     myServer = HTTPServer((hostname, port), RfMockupServer)
+
+
+    def clear_subscriptions():
+        sub_path = MockDir+'/redfish/v1/EventService/Subscriptions/index.json'
+        sub_payload = None
+        if os.path.isfile(sub_path):
+            with open(sub_path) as f:
+                sub_payload = json.load(f)
+                f.close()            
+        
+        Members = sub_payload.get('Members')
+        for member in Members:
+            if os.path.exists(MockDir+member['@odata.id']):
+                shutil.rmtree(MockDir+member['@odata.id'])
+        sub_payload['Members'] = []
+        sub_payload['Members@odata.count'] = 0
+        PrettyJson = json.dumps(sub_payload, indent=4, separators=(',', ":"))
+        with open(sub_path, "w") as outfile:
+            outfile.write(PrettyJson)
+        outfile.close()  
 
     def sigterm_handler(signal_number, frame):
         logger.info("SIGTERM: Shutting down http server")
